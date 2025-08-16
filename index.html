@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Midnight Riddle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* * WIDGET STYLES
+         * A visually stunning, mobile-first poetry experience inspired by Didot typography.
+        */
+        :root {
+            --background-color: #EDE6E0; /* Updated background color */
+            --text-color: #111;
+            --highlight-color: #9F1617; /* New color for specific words */
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 1s ease;
+        }
+
+        #riddle-container {
+            max-width: 800px;
+            width: 90%;
+            margin: 15vh auto; /* Give top margin and center horizontally */
+            text-align: center;
+        }
+
+        #riddle-text {
+            font-size: clamp(2rem, 6vw, 4.5rem); /* Responsive font size */
+            font-weight: 700;
+            line-height: 1.5;
+            letter-spacing: 0.05em;
+            margin: 0;
+            padding: 0;
+            white-space: pre-wrap;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        #riddle-text .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        #riddle-text .highlight {
+            color: var(--highlight-color);
+        }
+        
+        #riddle-form {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 3rem;
+            opacity: 0;
+            transition: opacity 1s ease 0.5s;
+        }
+
+        #riddle-form input[type="text"] {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(0,0,0,0.2);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--text-color);
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+            padding: 10px;
+            transition: border-color 0.3s ease;
+        }
+        
+        #riddle-form input[type="text"]::placeholder {
+            color: rgba(0,0,0,0.3);
+            opacity: 1;
+        }
+
+        #riddle-form input[type="text"]:focus {
+            outline: none;
+            border-color: var(--text-color);
+        }
+
+        #submit-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            margin-top: 2rem;
+            padding: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        #submit-icon:hover {
+            transform: scale(1.15);
+        }
+
+        #submit-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--highlight-color); /* Changed to red */
+        }
+
+
+        #feedback-message {
+            margin-top: 2rem;
+            font-size: 1.5rem;
+            font-style: italic;
+            min-height: 2em;
+        }
+
+        .correct { color: #006400; }
+        .incorrect { color: #8B0000; }
+    </style>
+</head>
+<body>
+
+    <div id="riddle-container">
+        <p id="riddle-text"></p>
+        <form id="riddle-form" onsubmit="checkAnswer(event)">
+            <input type="text" id="riddle-answer" required autocomplete="off" placeholder="Say my name.">
+            <button type="button" id="submit-icon" aria-label="Submit Answer">
+                <!-- Dagger Icon with Handle -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2L9 9H11V14H7V16H11V22H13V16H17V14H13V9H15L12 2Z" /></svg>
+            </button>
+            <div id="feedback-message"></div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const riddleElement = document.getElementById('riddle-text');
+            const riddleForm = document.getElementById('riddle-form');
+            const answerInput = document.getElementById('riddle-answer');
+            const submitButton = document.getElementById('submit-icon');
+            
+            const fullPoem = `From the silence, darkly spoken,
+Threads of riddles left unbroken,
+Every word a cryptic token,
+From the night’s plutonian shore.
+
+Came a fowl vis’tor tapping,
+On your thoughts its talons rapping,
+Challenger to your mind mapping
+Name this bird of myth, and lore.
+Till you answer nothing more.
+
+“Tell me, dreamer, tell me, guesser,
+Dare you name this dark confessor?
+Mark the sound of your addressor
+Bound in poems evermore.
+
+Sit you now, engage in guessing,
+Not one more syllable expressed in—
+Name in repetend is dressed in
+Say the name I hunger for?
+My name is not, nevermore.`;
+            
+            const words = fullPoem.split(/(\s+)/); // Split by spaces and keep them
+            const highlightWords = ['cryptic', 'lore', 'dreamer', 'poems', 'nevermore'];
+
+            words.forEach(word => {
+                if (word.trim() !== '') {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    
+                    const cleanedWord = word.trim().replace(/[.,?]/g, '').toLowerCase();
+                    if (highlightWords.includes(cleanedWord)) {
+                        wordSpan.classList.add('highlight');
+                    }
+
+                    wordSpan.textContent = word;
+                    riddleElement.appendChild(wordSpan);
+                } else {
+                    riddleElement.append(document.createTextNode(word));
+                }
+            });
+            
+            riddleElement.style.opacity = 1;
+            const wordSpans = riddleElement.querySelectorAll('.word');
+            let lastOffsetTop = -1;
+            let animatedWordsCount = 0; // Counter for animated words
+
+            const showForm = () => {
+                riddleForm.style.display = 'flex';
+                riddleForm.style.opacity = 1;
+                answerInput.focus();
+                riddleForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            };
+
+            wordSpans.forEach((span, index) => {
+                setTimeout(() => {
+                    span.style.opacity = '1';
+                    span.style.transform = 'translateY(0)';
+                    animatedWordsCount++;
+
+                    if (span.offsetTop > lastOffsetTop) {
+                        span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        lastOffsetTop = span.offsetTop;
+                    }
+
+                    // When the last word is animated, reveal the form.
+                    if (animatedWordsCount === wordSpans.length) {
+                        setTimeout(showForm, 800); // A brief pause after the last word for effect
+                    }
+                }, index * 250);
+            });
+
+            submitButton.addEventListener('click', () => {
+                riddleForm.requestSubmit();
+            });
+        });
+
+        function checkAnswer(event) {
+            event.preventDefault();
+
+            const correctAnswer = "Quothe";
+            const redirectURL = "https://en.wikipedia.org/wiki/The_Raven";
+
+            const userAnswer = document.getElementById('riddle-answer').value;
+            const feedback = document.getElementById('feedback-message');
+            const riddleForm = document.getElementById('riddle-form');
+            const answerInput = document.getElementById('riddle-answer');
+
+            if (userAnswer.trim().toLowerCase() === correctAnswer.toLowerCase()) {
+                feedback.className = "correct";
+                feedback.textContent = "Very well...";
+                document.body.style.backgroundColor = '#e0ffe0';
+                setTimeout(() => {
+                    window.location.href = redirectURL;
+                }, 1500);
+
+            } else {
+                feedback.className = "incorrect";
+                feedback.textContent = "Try again.";
+                document.body.style.backgroundColor = '#ffe0e0';
+                answerInput.value = '';
+                setTimeout(() => {
+                    document.body.style.backgroundColor = 'var(--background-color)';
+                }, 1000);
+            }
+        }
+    </script>
+
+</body>
+</html>
