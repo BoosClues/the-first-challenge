@@ -196,7 +196,7 @@
 
             // Create utility for input validation
             const validateInput = {
-                c: atob('UXVvdGhl'), // Looks like a config value
+                c: atob('UXVvdGg='), // Base64 encoded "Quoth"
                 p: (s) => {
                     let x = s.toLowerCase();
                     if (x === atob('Y2hlYXRlciBjaGVhdGVyIHBvb3BvbyBlYXRlcg==')) {
