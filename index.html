@@ -194,8 +194,18 @@
             ];
             // Replace the answer validation section with:
 
-            // Replace the complex answer checking with simple version
-            const correctAnswer = "Quothe";
+            // Create utility for input validation
+            const validateInput = {
+                c: atob('UXVvdGhl'), // Looks like a config value
+                p: (s) => {
+                    let x = s.toLowerCase();
+                    if (x === atob('Y2hlYXRlciBjaGVhdGVyIHBvb3BvbyBlYXRlcg==')) {
+                        // They found our "hidden" base64 - trigger special feedback
+                        return 'inspect';
+                    }
+                    return x === validateInput.c.toLowerCase();
+                }
+            };
 
             // --- UI ELEMENTS ---
             const scrollContainer = document.getElementById('scroll-container');
@@ -396,8 +406,12 @@
             // Actual answer validation using a hash
             function checkAnswer() {
                 const guessInput = document.getElementById('guess-input');
-                const userAnswer = guessInput.value.trim();
-                if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                const result = validateInput.p(guessInput.value.trim());
+                
+                if (result === 'inspect') {
+                    // They tried to use the base64 string
+                    showFeedback("A good riddle is sometimes a puzzle in words, other times a magician's trick. And sometimes... it's a trap for the impatient.");
+                } else if (result === true) {
                     handleCorrectAnswer();
                 } else {
                     showFeedback("That is not the word whispered on the bleak winds. Try again.");
