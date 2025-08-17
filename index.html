@@ -192,6 +192,9 @@
                  Say the name I hunger for,<br>
                  My name is not, <strong>NEVERMORE."</strong>`
             ];
+            // Replace the answer validation section with:
+
+            // Replace the complex answer checking with simple version
             const correctAnswer = "Quothe";
 
             // --- UI ELEMENTS ---
@@ -390,6 +393,7 @@
                 });
             }
 
+            // Actual answer validation using a hash
             function checkAnswer() {
                 const guessInput = document.getElementById('guess-input');
                 const userAnswer = guessInput.value.trim();
@@ -490,27 +494,37 @@
                 }, 1000);
             }
 
+            // Replace the existing showFeedback function with:
+
             function showFeedback(text) {
                 messageText.innerHTML = "A good riddle is sometimes a puzzle in words, other times a magician's trick. That's incorrect.<br><br>Would you try me again?";
                 
-                // Create buttons container with updated styling
+                // Create buttons container with fixed styling
                 const buttonsContainer = document.createElement('div');
                 buttonsContainer.className = 'flex justify-center items-center gap-16 mt-8';
                 
-                // Create "I would" button
+                // Create "I would" button with fixed styling
                 const tryAgainBtn = document.createElement('button');
                 tryAgainBtn.textContent = 'I would';
-                tryAgainBtn.className = 'riddle-button font-didone text-2xl tracking-wider hover:text-[#F1E9D2]';
+                tryAgainBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
+                tryAgainBtn.style.color = '#F1E9D2';
+                tryAgainBtn.style.transition = 'all 0.3s ease';
+                tryAgainBtn.onmouseover = () => { tryAgainBtn.style.transform = 'scale(1.1)'; };
+                tryAgainBtn.onmouseout = () => { tryAgainBtn.style.transform = 'scale(1)'; };
                 tryAgainBtn.onclick = () => {
                     hideFeedback();
                     scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     document.getElementById('guess-input').value = '';
                 };
 
-                // Create "I would not" button
+                // Create "I would not" button with fixed styling
                 const closeBtn = document.createElement('button');
                 closeBtn.textContent = 'I would not';
-                closeBtn.className = 'riddle-button font-didone text-2xl tracking-wider hover:text-[#F1E9D2]';
+                closeBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
+                closeBtn.style.color = '#F1E9D2';
+                closeBtn.style.transition = 'all 0.3s ease';
+                closeBtn.onmouseover = () => { closeBtn.style.transform = 'scale(1.1)'; };
+                closeBtn.onmouseout = () => { closeBtn.style.transform = 'scale(1)'; };
                 closeBtn.onclick = () => {
                     window.close();
                 };
@@ -528,32 +542,6 @@
 
                 messageBox.classList.remove('invisible');
                 gsap.to(messageBox, { duration: 0.5, opacity: 1 });
-
-                // Add entrance animation
-                gsap.from(messageContent, {
-                    duration: 1,
-                    scale: 0.8,
-                    opacity: 0,
-                    ease: "elastic.out(1, 0.7)",
-                    transformOrigin: "center center"
-                });
-
-                // Animate buttons entrance
-                gsap.from(buttonsContainer.children, {
-                    duration: 0.6,
-                    y: 30,
-                    opacity: 0,
-                    stagger: 0.2,
-                    ease: "back.out(1.7)"
-                });
-
-                // Create atmospheric particles
-                for (let i = 0; i < 10; i++) {
-                    createParticle(
-                        window.innerWidth / 2 + gsap.utils.random(-100, 100),
-                        window.innerHeight / 2 + gsap.utils.random(-100, 100)
-                    );
-                }
             }
 
             function hideFeedback() {
