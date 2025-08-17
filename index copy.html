@@ -39,13 +39,7 @@
             z-index: 10;
         }
         .vignette {
-            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.95) 150%);
-            mix-blend-mode: multiply;
-            animation: pulseVignette 8s infinite;
-        }
-        @keyframes pulseVignette {
-            0%, 100% { background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.95) 150%); }
-            50% { background: radial-gradient(circle, transparent 35%, rgba(0, 0, 0, 0.9) 150%); }
+            box-shadow: inset 0 0 20vw 5vw #1D1D1D;
         }
         .noise-texture {
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23f)"/></svg>');
@@ -106,43 +100,14 @@
             width: 100%;
             max-width: 800px; /* Increase from previous 3xl */
             margin: 0 auto;
-            padding: 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100%;
+            padding: 1rem;
         }
 
-        /* Add this new section for typography adjustments */
         .stanza-section p {
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            line-height: 1.3;
-            white-space: pre-line;
+            font-size: clamp(1.5rem, 4vw, 2.5rem); /* Responsive font size */
+            line-height: 1.3; /* Reduced from 1.6 */
+            white-space: pre-line; /* Preserve intentional line breaks */
             margin: 0 auto;
-            text-align: center; /* Center the text */
-            font-feature-settings: "hist", "ss01"; /* Enable historical ligatures */
-            font-variant-ligatures: common-ligatures historical-ligatures;
-            letter-spacing: 0.03em; /* Slight letter spacing for that aged look */
-            max-width: 38ch; /* Control line length for readability */
-            padding: 0 1rem;
-        }
-
-        /* Update container styling for better centering */
-        .stanza-section .container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100%;
-        }
-
-        /* Add classical first-line treatment */
-        .stanza-section p span:first-of-type {
-            font-size: 1.2em;
-            font-weight: 500;
         }
     </style>
 </head>
@@ -528,32 +493,6 @@
 
                 messageBox.classList.remove('invisible');
                 gsap.to(messageBox, { duration: 0.5, opacity: 1 });
-
-                // Add entrance animation
-                gsap.from(messageContent, {
-                    duration: 1,
-                    scale: 0.8,
-                    opacity: 0,
-                    ease: "elastic.out(1, 0.7)",
-                    transformOrigin: "center center"
-                });
-
-                // Animate buttons entrance
-                gsap.from(buttonsContainer.children, {
-                    duration: 0.6,
-                    y: 30,
-                    opacity: 0,
-                    stagger: 0.2,
-                    ease: "back.out(1.7)"
-                });
-
-                // Create atmospheric particles
-                for (let i = 0; i < 10; i++) {
-                    createParticle(
-                        window.innerWidth / 2 + gsap.utils.random(-100, 100),
-                        window.innerHeight / 2 + gsap.utils.random(-100, 100)
-                    );
-                }
             }
 
             function hideFeedback() {
@@ -564,93 +503,6 @@
                 });
             }
             
-            function enhanceImmersion() {
-                // Custom Cursor
-                const cursor = document.createElement('div');
-                const cursorDot = document.createElement('div');
-                cursor.className = 'custom-cursor';
-                cursorDot.className = 'cursor-dot';
-                document.body.appendChild(cursor);
-                document.body.appendChild(cursorDot);
-
-                // Cursor Movement
-                document.addEventListener('mousemove', (e) => {
-                    gsap.to(cursor, { duration: 0.23, left: e.clientX, top: e.clientY });
-                    gsap.to(cursorDot, { duration: 0.1, left: e.clientX, top: e.clientY });
-                });
-
-                // Particle System
-                function createParticle(x, y) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    document.body.appendChild(particle);
-
-                    gsap.set(particle, {
-                        left: x,
-                        top: y,
-                        width: gsap.utils.random(2, 6),
-                        height: gsap.utils.random(2, 6),
-                    });
-
-                    gsap.to(particle, {
-                        duration: gsap.utils.random(1, 3),
-                        opacity: gsap.utils.random(0.1, 0.3),
-                        y: y - gsap.utils.random(50, 100),
-                        x: x + gsap.utils.random(-50, 50),
-                        rotation: gsap.utils.random(-360, 360),
-                        ease: "power2.out",
-                        onComplete: () => particle.remove()
-                    });
-                }
-
-                // Spawn particles on mouse move
-                let lastSpawn = 0;
-                document.addEventListener('mousemove', (e) => {
-                    const now = Date.now();
-                    if (now - lastSpawn > 50) { // Limit particle creation
-                        createParticle(e.clientX, e.clientY);
-                        lastSpawn = now;
-                    }
-                });
-
-                // Interactive Text Effects
-                document.querySelectorAll('.stanza-section p').forEach(stanza => {
-                    stanza.addEventListener('mousemove', (e) => {
-                        const rect = stanza.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-                        
-                        gsap.to(stanza, {
-                            duration: 0.5,
-                            textShadow: `${(x - rect.width / 2) / 50}px ${(y - rect.height / 2) / 50}px 15px rgba(241, 233, 210, 0.3)`,
-                            ease: "power2.out"
-                        });
-                    });
-
-                    stanza.addEventListener('mouseleave', () => {
-                        gsap.to(stanza, {
-                            duration: 0.5,
-                            textShadow: 'none',
-                            ease: "power2.out"
-                        });
-                    });
-                });
-
-                // Add floating effect to all stanzas
-                gsap.to('.stanza-section p', {
-                    y: 10,
-                    duration: 2,
-                    repeat: -1,
-                    yoyo: true,
-                    ease: "power1.inOut",
-                    stagger: {
-                        each: 0.5,
-                        from: "random"
-                    }
-                });
-            }
-
-            enhanceImmersion();
             initializeExperience();
         });
     </script>
