@@ -229,13 +229,22 @@
             const sectionHeight = window.innerHeight;
             scrollContainer.scrollTo({ top: currentScroll + sectionHeight, behavior: 'smooth' });
         });
-        // Hide arrow once user has scrolled a bit
-        let arrowHidden = false;
+
+        // Hide arrow while scrolling; show again after scroll stops if not on guess/final section
+        let scrollTimeout;
         scrollContainer.addEventListener('scroll', () => {
-            if (!arrowHidden && scrollContainer.scrollTop > 50) {
-                scrollArrow.style.display = 'none';
-                arrowHidden = true;
-            }
+            scrollArrow.style.display = 'none';
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const currentScroll = scrollContainer.scrollTop;
+                const sectionHeight = window.innerHeight;
+                const currentIndex = Math.round(currentScroll / sectionHeight);
+                if (currentIndex < riddleStanzas.length) {
+                    scrollArrow.style.display = '';
+                } else {
+                    scrollArrow.style.display = 'none';
+                }
+            }, 200);
         });
 
         // --- ANIMATION & LOGIC ---
@@ -318,29 +327,29 @@
                                 return;
                             }
 
-                                // Split line into words
-                                const words = line.split(/(\s+)/);
+                            // Split line into words
+                            const words = line.split(/(\s+)/);
 
-                                words.forEach((word) => {
-                                    if (word.trim() === '') {
-                                        // Preserve spaces
-                                        fragment.appendChild(document.createTextNode(word));
-                                    } else {
-                                        const wordSpan = document.createElement('span');
-                                        wordSpan.style.display = 'inline-block';
-                                        wordSpan.style.whiteSpace = 'nowrap'; // Keep word together
+                            words.forEach((word) => {
+                                if (word.trim() === '') {
+                                    // Preserve spaces
+                                    fragment.appendChild(document.createTextNode(word));
+                                } else {
+                                    const wordSpan = document.createElement('span');
+                                    wordSpan.style.display = 'inline-block';
+                                    wordSpan.style.whiteSpace = 'nowrap'; // Keep word together
 
-                                        // Wrap each character in the word
-                                        for (const char of word) {
-                                            const span = document.createElement('span');
-                                            span.textContent = char;
-                                            span.style.display = 'inline-block';
-                                            if (char.trim() !== '') spansToAnimate.push(span);
-                                            wordSpan.appendChild(span);
-                                        }
-                                        fragment.appendChild(wordSpan);
+                                    // Wrap each character in the word
+                                    for (const char of word) {
+                                        const span = document.createElement('span');
+                                        span.textContent = char;
+                                        span.style.display = 'inline-block';
+                                        if (char.trim() !== '') spansToAnimate.push(span);
+                                        wordSpan.appendChild(span);
                                     }
-                                });
+                                    fragment.appendChild(wordSpan);
+                                }
+                            });
                         });
 
                         parentElement.replaceChild(fragment, node);
@@ -678,5 +687,3 @@
     </script>
 </body>
 </html>
-
-
