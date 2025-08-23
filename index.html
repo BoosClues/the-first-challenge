@@ -18,16 +18,13 @@
             font-family: 'Montserrat', sans-serif;
             overflow: hidden; /* Prevent default scrollbars */
         }
-
         .font-didone {
             font-family: 'Playfair Display', serif;
             font-style: italic; /* Italicize the entire poem */
         }
-        
         .text-blood-red {
             color: #8A0303; /* Blood Red */
         }
-
         /* ATMOSPHERIC EFFECTS */
         .vignette, .noise-texture {
             position: fixed;
@@ -57,7 +54,6 @@
             0%, 100% { opacity: 0.05; }
             50% { opacity: 0.08; }
         }
-
         /* UI ELEMENT STYLING */
         .riddle-input {
             background-color: transparent;
@@ -82,7 +78,6 @@
             color: #390D3E; /* Tyrian Purple */
             transform: scale(1.1);
         }
-
         /* LAYOUT & SCROLLING */
         #scroll-container {
             width: 100%;
@@ -100,7 +95,6 @@
             flex-shrink: 0;
             padding: 0 2rem; /* Add padding for mobile */
         }
-
         /* Add this new style for the stanza container */
         .stanza-section .container {
             width: 100%;
@@ -112,7 +106,6 @@
             align-items: center;
             min-height: 100%;
         }
-
         /* Add this new section for typography adjustments */
         .stanza-section p {
             font-size: clamp(1.5rem, 4vw, 2.5rem);
@@ -126,7 +119,6 @@
             max-width: 38ch; /* Control line length for readability */
             padding: 0 1rem;
         }
-
         /* Update container styling for better centering */
         .stanza-section .container {
             width: 100%;
@@ -138,11 +130,27 @@
             align-items: center;
             min-height: 100%;
         }
-
         /* Add classical first-line treatment */
         .stanza-section p span:first-of-type {
             font-size: 1.2em;
             font-weight: 500;
+        }
+        /* SCROLL ARROW STYLING */
+        .scroll-arrow {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            color: #F1E9D2;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+            z-index: 20;
+        }
+        @keyframes bounce {
+            0%,20%,50%,80%,100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
         }
     </style>
 </head>
@@ -155,7 +163,7 @@
     <div id="scroll-container">
         <!-- Stanza sections will be injected here -->
     </div>
-    
+
     <!-- Feedback Message Box (remains fixed) -->
     <div id="message-box" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center opacity-0 invisible transition-opacity duration-500 z-50">
         <div id="message-content" class="bg-[#1D1D1D] border border-[#313131] p-8 rounded-lg shadow-2xl text-center max-w-md">
@@ -167,138 +175,153 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DATA ---
-            const riddleStanzas = [
-                `From the silence, darkly spoken,<br>
-                 Threads of riddles left unbroken,<br>
-                 Every word a cryptic token,<br>
-                 From the night’s plutonian shore.`,
-                
-                `Came a fowl vis’tor tapping,<br>
-                 On your thoughts its talons rapping,<br>
-                 Challenger to your mind mapping<br>
-                 Name this bird of myth, and lore.<br>
-                 Till you answer nothing more.`,
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DATA ---
+        const riddleStanzas = [
+            `From the silence, darkly spoken,<br>
+             Threads of riddles left unbroken,<br>
+             Every word a cryptic token,<br>
+             From the night’s plutonian shore.`,
+            `Came a fowl vis’tor tapping,<br>
+             On your thoughts its talons rapping,<br>
+             Challenger to your mind mapping<br>
+             Name this bird of myth, and lore.<br>
+             Till you answer nothing more.`,
+            `“Tell me, dreamer, tell me, guesser,<br>
+             Dare you name this dark confessor?<br>
+             Mark the sound of your addressor<br>
+             Bound in poems evermore.`,
+            `Sit you now, engage in guessing,<br>
+             Not one more syllable expressed in—<br>
+             Name in repetend is dressed in<br>
+             Say the name I hunger for,<br>
+             My name is not, <strong>NEVERMORE."</strong>`
+        ];
 
-                `“Tell me, dreamer, tell me, guesser,<br>
-                 Dare you name this dark confessor?<br>
-                 Mark the sound of your addressor<br>
-                 Bound in poems evermore.`,
-
-                `Sit you now, engage in guessing,<br>
-                 Not one more syllable expressed in—<br>
-                 Name in repetend is dressed in<br>
-                 Say the name I hunger for,<br>
-                 My name is not, <strong>NEVERMORE."</strong>`
-            ];
-            // Replace the answer validation section with:
-
-            // Create utility for input validation
-            const validateInput = {
-                c: atob('UXVvdGg='), // Base64 encoded "Quoth"
-                p: (s) => {
-                    let x = s.toLowerCase();
-                    if (x === atob('Y2hlYXRlciBjaGVhdGVyIHBvb3BvbyBlYXRlcg==')) {
-                        // They found our "hidden" base64 - trigger special feedback
-                        return 'inspect';
-                    }
-                    return x === validateInput.c.toLowerCase();
+        // Create utility for input validation
+        const validateInput = {
+            c: atob('UXVvdGg='), // Base64 encoded "Quoth"
+            p: (s) => {
+                let x = s.toLowerCase();
+                if (x === atob('Y2hlYXRlciBjaGVhdGVyIHBvb3BvbyBlYXRlcg==')) {
+                    // They found our "hidden" base64 - trigger special feedback
+                    return 'inspect';
                 }
-            };
-
-            // --- UI ELEMENTS ---
-            const scrollContainer = document.getElementById('scroll-container');
-            const messageBox = document.getElementById('message-box');
-            const messageText = document.getElementById('message-text');
-
-            let currentAnimation = null; // Keep track of the current animation
-
-            // --- ANIMATION & LOGIC ---
-
-            function initializeExperience() {
-                createStanzaSections();
-                setupObservers();
-                setupNavigation();
+                return x === validateInput.c.toLowerCase();
             }
+        };
 
-            function createStanzaSections() {
-                riddleStanzas.forEach((stanzaHTML, index) => {
-                    const section = document.createElement('section');
-                    section.className = 'stanza-section';
-                    section.dataset.index = index;
-                    section.innerHTML = `
-                        <div class="container">
-                            <p class="font-didone"></p>
-                        </div>
-                    `;
-                    scrollContainer.appendChild(section);
-                });
+        // --- UI ELEMENTS ---
+        const scrollContainer = document.getElementById('scroll-container');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
 
-                // Update the guess section styling to match
-                const guessSection = document.createElement('section');
-                guessSection.className = 'stanza-section';
-                guessSection.dataset.index = riddleStanzas.length;
-                guessSection.innerHTML = `
-                    <div id="guess-area" class="container opacity-0 flex flex-col items-center">
-                        <input type="text" id="guess-input" class="riddle-input font-didone text-2xl w-full max-w-xs p-3 text-center" placeholder="Say my name." autocomplete="off">
-                        <button id="guess-button" class="riddle-button mt-6 text-4xl leading-none tracking-widest">...</button>
+        let currentAnimation = null; // Keep track of the current animation
+
+        // --- ADD SCROLL ARROW ---
+        const scrollArrow = document.createElement('div');
+        scrollArrow.className = 'scroll-arrow';
+        scrollArrow.innerHTML = '&#x2193;';
+        document.body.appendChild(scrollArrow);
+        scrollArrow.addEventListener('click', () => {
+            // Scroll to the next section when arrow is clicked
+            const currentScroll = scrollContainer.scrollTop;
+            const sectionHeight = window.innerHeight;
+            scrollContainer.scrollTo({ top: currentScroll + sectionHeight, behavior: 'smooth' });
+        });
+        // Hide arrow once user has scrolled a bit
+        let arrowHidden = false;
+        scrollContainer.addEventListener('scroll', () => {
+            if (!arrowHidden && scrollContainer.scrollTop > 50) {
+                scrollArrow.style.display = 'none';
+                arrowHidden = true;
+            }
+        });
+
+        // --- ANIMATION & LOGIC ---
+        function initializeExperience() {
+            createStanzaSections();
+            setupObservers();
+            setupNavigation();
+        }
+
+        function createStanzaSections() {
+            riddleStanzas.forEach((stanzaHTML, index) => {
+                const section = document.createElement('section');
+                section.className = 'stanza-section';
+                section.dataset.index = index;
+                section.innerHTML = `
+                    <div class="container">
+                        <p class="font-didone"></p>
                     </div>
                 `;
-                scrollContainer.appendChild(guessSection);
-            }
+                scrollContainer.appendChild(section);
+            });
 
-            function setupObservers() {
-                const sections = document.querySelectorAll('.stanza-section');
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting && !entry.target.classList.contains('is-visible')) {
-                            entry.target.classList.add('is-visible');
-                            const index = parseInt(entry.target.dataset.index);
-                            if (index < riddleStanzas.length) {
-                                animateStanza(entry.target, riddleStanzas[index]);
-                            } else {
-                                gsap.to(entry.target.querySelector('#guess-area'), {
-                                    duration: 1.5,
-                                    opacity: 1,
-                                    ease: 'power2.out'
-                                });
-                            }
+            // Create guess section
+            const guessSection = document.createElement('section');
+            guessSection.className = 'stanza-section';
+            guessSection.dataset.index = riddleStanzas.length;
+            guessSection.innerHTML = `
+                <div id="guess-area" class="container opacity-0 flex flex-col items-center">
+                    <input type="text" id="guess-input" class="riddle-input font-didone text-2xl w-full max-w-xs p-3 text-center" placeholder="Say my name." autocomplete="off">
+                    <button id="guess-button" class="riddle-button mt-6 text-4xl leading-none tracking-widest">...</button>
+                </div>
+            `;
+            scrollContainer.appendChild(guessSection);
+        }
+
+        function setupObservers() {
+            const sections = document.querySelectorAll('.stanza-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.classList.contains('is-visible')) {
+                        entry.target.classList.add('is-visible');
+                        const index = parseInt(entry.target.dataset.index);
+                        if (index < riddleStanzas.length) {
+                            animateStanza(entry.target, riddleStanzas[index]);
+                        } else {
+                            gsap.to(entry.target.querySelector('#guess-area'), {
+                                duration: 1.5,
+                                opacity: 1,
+                                ease: 'power2.out'
+                            });
                         }
-                    });
-                }, { threshold: 0.6 });
+                    }
+                });
+            }, { threshold: 0.6 });
 
-                sections.forEach(section => observer.observe(section));
-            }
+            sections.forEach(section => observer.observe(section));
+        }
 
-            function animateStanza(section, stanzaHTML) {
-                if (currentAnimation) currentAnimation.kill();
+        function animateStanza(section, stanzaHTML) {
+            if (currentAnimation) currentAnimation.kill();
 
-                const p = section.querySelector('p');
-                p.innerHTML = stanzaHTML;
+            const p = section.querySelector('p');
+            p.innerHTML = stanzaHTML;
 
-                const spansToAnimate = [];
-                
-                function wrapCharacters(parentElement) {
-                    const nodes = Array.from(parentElement.childNodes);
-                    nodes.forEach(node => {
-                        if (node.nodeType === Node.TEXT_NODE) {
-                            const text = node.textContent;
-                            const fragment = document.createDocumentFragment();
-                            
-                            // Split by line breaks first
-                            const lines = text.split(/(<br>|\n)/g);
-                            
-                            lines.forEach((line, i) => {
-                                if (line.match(/<br>|\n/)) {
-                                    fragment.appendChild(document.createElement('br'));
-                                    return;
-                                }
-                                
+            const spansToAnimate = [];
+
+            function wrapCharacters(parentElement) {
+                const nodes = Array.from(parentElement.childNodes);
+                nodes.forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent;
+                        const fragment = document.createDocumentFragment();
+
+                        // Split by line breaks first
+                        const lines = text.split(/(<br>|\n)/g);
+
+                        lines.forEach((line, i) => {
+                            if (line.match(/<br>|\n/)) {
+                                fragment.appendChild(document.createElement('br'));
+                                return;
+                            }
+
                                 // Split line into words
                                 const words = line.split(/(\s+)/);
-                                
-                                words.forEach((word, index) => {
+
+                                words.forEach((word) => {
                                     if (word.trim() === '') {
                                         // Preserve spaces
                                         fragment.appendChild(document.createTextNode(word));
@@ -306,7 +329,7 @@
                                         const wordSpan = document.createElement('span');
                                         wordSpan.style.display = 'inline-block';
                                         wordSpan.style.whiteSpace = 'nowrap'; // Keep word together
-                                        
+
                                         // Wrap each character in the word
                                         for (const char of word) {
                                             const span = document.createElement('span');
@@ -318,343 +341,341 @@
                                         fragment.appendChild(wordSpan);
                                     }
                                 });
-                            });
-                            
-                            parentElement.replaceChild(fragment, node);
-                        } else if (node.nodeType === Node.ELEMENT_NODE) {
-                            wrapCharacters(node);
-                        }
-                    });
-                }
-                
-                wrapCharacters(p);
+                        });
 
-                gsap.set(spansToAnimate, {
-                    opacity: 0,
-                    color: '#F1E9D2',
-                    textShadow: '0 0 15px rgba(241, 233, 210, 0.8)'
-                });
-
-                currentAnimation = gsap.to(spansToAnimate, {
-                    duration: 0.3,
-                    opacity: 1,
-                    textShadow: '0 0 0 rgba(241, 233, 210, 0)',
-                    stagger: 0.03,
-                    ease: 'power2.out',
-                    onComplete: () => { currentAnimation = null; }
+                        parentElement.replaceChild(fragment, node);
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        wrapCharacters(node);
+                    }
                 });
             }
-            
-            function setupNavigation() {
-                let isAnimating = false;
 
-                const navigate = () => {
-                    if (isAnimating) return; // Prevent navigation during animation
-                    
-                    if (currentAnimation) {
-                        isAnimating = true;
-                        // Complete current animation before navigating
-                        currentAnimation.progress(1).then(() => {
-                            const currentScroll = scrollContainer.scrollTop;
-                            const sectionHeight = window.innerHeight;
-                            const nextScroll = Math.round(currentScroll / sectionHeight) * sectionHeight + sectionHeight;
-                            
-                            if (nextScroll < scrollContainer.scrollHeight) {
-                                scrollContainer.scrollTo({
-                                    top: nextScroll,
-                                    behavior: 'smooth'
-                                });
-                            }
-                            isAnimating = false;
-                        });
-                    } else {
+            wrapCharacters(p);
+
+            gsap.set(spansToAnimate, {
+                opacity: 0,
+                color: '#F1E9D2',
+                textShadow: '0 0 15px rgba(241, 233, 210, 0.8)'
+            });
+
+            currentAnimation = gsap.to(spansToAnimate, {
+                duration: 0.3,
+                opacity: 1,
+                textShadow: '0 0 0 rgba(241, 233, 210, 0)',
+                stagger: 0.03,
+                ease: 'power2.out',
+                onComplete: () => { currentAnimation = null; }
+            });
+        }
+
+        function setupNavigation() {
+            let isAnimating = false;
+
+            const navigate = () => {
+                if (isAnimating) return; // Prevent navigation during animation
+
+                if (currentAnimation) {
+                    isAnimating = true;
+                    // Complete current animation before navigating
+                    currentAnimation.progress(1).then(() => {
                         const currentScroll = scrollContainer.scrollTop;
                         const sectionHeight = window.innerHeight;
                         const nextScroll = Math.round(currentScroll / sectionHeight) * sectionHeight + sectionHeight;
-                        
+
                         if (nextScroll < scrollContainer.scrollHeight) {
                             scrollContainer.scrollTo({
                                 top: nextScroll,
                                 behavior: 'smooth'
                             });
                         }
-                    }
-                };
-
-                // Add debounce to prevent multiple rapid clicks
-                let timeout;
-                scrollContainer.addEventListener('click', (e) => {
-                    if (e.target.tagName === 'INPUT' || e.target.closest('button')) {
-                        return;
-                    }
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-                        if (!isAnimating) {
-                            navigate();
-                        }
-                    }, 100);
-                });
-
-                const guessButton = document.getElementById('guess-button');
-                const guessInput = document.getElementById('guess-input');
-                guessButton.addEventListener('click', checkAnswer);
-                guessInput.addEventListener('keyup', (event) => {
-                    if (event.key === 'Enter') checkAnswer();
-                });
-            }
-
-            // Actual answer validation using a hash
-            function checkAnswer() {
-                const guessInput = document.getElementById('guess-input');
-                const result = validateInput.p(guessInput.value.trim());
-                
-                if (result === 'inspect') {
-                    // They tried to use the base64 string
-                    showFeedback("A good riddle is sometimes a puzzle in words, other times a magician's trick. And sometimes... it's a trap for the impatient.");
-                } else if (result === true) {
-                    handleCorrectAnswer();
+                        isAnimating = false;
+                    });
                 } else {
-                    showFeedback("That is not the word whispered on the bleak winds. Try again.");
-                }
-            }
+                    const currentScroll = scrollContainer.scrollTop;
+                    const sectionHeight = window.innerHeight;
+                    const nextScroll = Math.round(currentScroll / sectionHeight) * sectionHeight + sectionHeight;
 
-            async function handleCorrectAnswer() {
-                await gsap.to(scrollContainer, { duration: 1, opacity: 0, ease: 'power2.in' });
-
-                scrollContainer.innerHTML = '';
-                const finalSection = document.createElement('section');
-                finalSection.className = 'stanza-section';
-                finalSection.innerHTML = `
-                    <div class="container mx-auto p-8 text-center max-w-3xl">
-                        <p id="final-message" class="font-didone text-3xl md:text-4xl lg:text-5xl leading-relaxed text-blood-red"></p>
-                    </div>
-                `;
-                scrollContainer.appendChild(finalSection);
-                
-                scrollContainer.scrollTo({ top: 0 });
-                gsap.to(scrollContainer, { duration: 1, opacity: 1, ease: 'power2.out' });
-
-                const finalMessageP = document.getElementById('final-message');
-                const messageParts = [
-                    { text: "The devil told you that.", type: 'furious' },
-                    { text: "Very Well...", type: 'resigned' },
-                    { text: "One Moment.", type: 'normal' }
-                ];
-
-                for (const part of messageParts) {
-                    const partEl = document.createElement('div');
-                    partEl.style.display = 'block';
-                    if (messageParts.indexOf(part) > 0) {
-                        partEl.style.marginTop = '1.5rem';
-                    }
-                    finalMessageP.appendChild(partEl);
-
-                    const words = part.text.split(' ');
-                    const charsToAnimate = [];
-
-                    words.forEach((word, index) => {
-                        const wordSpan = document.createElement('span');
-                        wordSpan.style.display = 'inline-block';
-                        wordSpan.style.marginRight = '0.75em';
-                        
-                        for(const char of word) {
-                            const span = document.createElement('span');
-                            span.textContent = char;
-                            span.style.display = 'inline-block';
-                            wordSpan.appendChild(span);
-                            charsToAnimate.push(span);
-                        }
-                        partEl.appendChild(wordSpan);
-                    });
-
-                    if (part.type === 'furious') {
-                        partEl.style.fontWeight = 'bold';
-                        partEl.style.fontSize = '1.1em';
-                        gsap.set(charsToAnimate, { opacity: 0 });
-                        await gsap.to(charsToAnimate, {
-                            duration: 0.2,
-                            opacity: 1,
-                            x: 'random(-5, 5)',
-                            y: 'random(-5, 5)',
-                            rotation: 'random(-10, 10)',
-                            stagger: 0.015,
-                            ease: 'power3.inOut'
-                        });
-                    } else if (part.type === 'resigned') {
-                        gsap.set(charsToAnimate, { opacity: 0, y: 20 });
-                        await gsap.to(charsToAnimate, {
-                            duration: 1.5,
-                            opacity: 0.7,
-                            y: 0,
-                            stagger: 0.1,
-                            ease: 'power2.out'
-                        });
-                    } else {
-                        gsap.set(charsToAnimate, { opacity: 0, textShadow: '0 0 20px #8A0303' });
-                        await gsap.to(charsToAnimate, {
-                            duration: 0.5,
-                            opacity: 1,
-                            textShadow: '0 0 0 #8A0303',
-                            stagger: 0.06,
-                            ease: 'power2.out'
+                    if (nextScroll < scrollContainer.scrollHeight) {
+                        scrollContainer.scrollTo({
+                            top: nextScroll,
+                            behavior: 'smooth'
                         });
                     }
-
-                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
-                
-                setTimeout(() => {
-                    window.location.href = '#'; // Placeholder for your final link
-                }, 1000);
+            };
+
+            // Add debounce to prevent multiple rapid clicks
+            let timeout;
+            scrollContainer.addEventListener('click', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.closest('button')) {
+                    return;
+                }
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    navigate();
+                }, 100);
+            });
+
+            const guessButton = document.getElementById('guess-button');
+            const guessInput = document.getElementById('guess-input');
+            guessButton.addEventListener('click', checkAnswer);
+            guessInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') checkAnswer();
+            });
+        }
+
+        // Actual answer validation using a hash
+        function checkAnswer() {
+            const guessInput = document.getElementById('guess-input');
+            const result = validateInput.p(guessInput.value.trim());
+
+            if (result === 'inspect') {
+                // They tried to use the base64 string
+                showFeedback("A good riddle is sometimes a puzzle in words, other times a magician's trick. And sometimes... it's a trap for the impatient.");
+            } else if (result === true) {
+                handleCorrectAnswer();
+            } else {
+                showFeedback("That is not the word whispered on the bleak winds. Try again.");
             }
+        }
 
-            // Replace the existing showFeedback function with:
+        async function handleCorrectAnswer() {
+            await gsap.to(scrollContainer, { duration: 1, opacity: 0, ease: 'power2.in' });
 
-            function showFeedback(text) {
-                messageText.innerHTML = "A good riddle is sometimes a puzzle in words, other times a magician's trick. That's incorrect.<br><br>Would you try me again?";
-                
-                // Create buttons container with fixed styling
-                const buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'flex justify-center items-center gap-16 mt-8';
-                
-                // Create "I would" button with fixed styling
-                const tryAgainBtn = document.createElement('button');
-                tryAgainBtn.textContent = 'I would';
-                tryAgainBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
-                tryAgainBtn.style.color = '#F1E9D2';
-                tryAgainBtn.style.transition = 'all 0.3s ease';
-                tryAgainBtn.onmouseover = () => { tryAgainBtn.style.transform = 'scale(1.1)'; };
-                tryAgainBtn.onmouseout = () => { tryAgainBtn.style.transform = 'scale(1)'; };
-                tryAgainBtn.onclick = () => {
-                    hideFeedback();
-                    scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                    document.getElementById('guess-input').value = '';
-                };
+            scrollContainer.innerHTML = '';
+            const finalSection = document.createElement('section');
+            finalSection.className = 'stanza-section';
+            finalSection.innerHTML = `
+                <div class="container mx-auto p-8 text-center max-w-3xl">
+                    <p id="final-message" class="font-didone text-3xl md:text-4xl lg:text-5xl leading-relaxed text-blood-red"></p>
+                </div>
+            `;
+            scrollContainer.appendChild(finalSection);
 
-                // Create "I would not" button with fixed styling
-                const closeBtn = document.createElement('button');
-                closeBtn.textContent = 'I would not';
-                closeBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
-                closeBtn.style.color = '#F1E9D2';
-                closeBtn.style.transition = 'all 0.3s ease';
-                closeBtn.onmouseover = () => { closeBtn.style.transform = 'scale(1.1)'; };
-                closeBtn.onmouseout = () => { closeBtn.style.transform = 'scale(1)'; };
-                closeBtn.onclick = () => {
-                    window.close();
-                };
+            scrollContainer.scrollTo({ top: 0 });
+            gsap.to(scrollContainer, { duration: 1, opacity: 1, ease: 'power2.out' });
 
-                // Add buttons to container
-                buttonsContainer.appendChild(tryAgainBtn);
-                buttonsContainer.appendChild(closeBtn);
+            const finalMessageP = document.getElementById('final-message');
+            const messageParts = [
+                { text: "The devil told you that.", type: 'furious' },
+                { text: "Very Well...", type: 'resigned' },
+                { text: "One Moment.", type: 'normal' }
+            ];
 
-                // Clear existing content and add new elements
-                const messageContent = document.querySelector('#message-content');
-                messageContent.innerHTML = '';
-                messageContent.className = 'bg-[#1D1D1D] border border-[#313131] p-12 rounded-lg shadow-2xl text-center max-w-2xl mx-4';
-                messageContent.appendChild(messageText);
-                messageContent.appendChild(buttonsContainer);
+            for (const part of messageParts) {
+                const partEl = document.createElement('div');
+                partEl.style.display = 'block';
+                if (messageParts.indexOf(part) > 0) {
+                    partEl.style.marginTop = '1.5rem';
+                }
+                finalMessageP.appendChild(partEl);
 
-                messageBox.classList.remove('invisible');
-                gsap.to(messageBox, { duration: 0.5, opacity: 1 });
-            }
+                const words = part.text.split(' ');
+                const charsToAnimate = [];
 
-            function hideFeedback() {
-                gsap.to(messageBox, { 
-                    duration: 0.5, 
-                    opacity: 0,
-                    onComplete: () => messageBox.classList.add('invisible')
+                words.forEach((word) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.style.display = 'inline-block';
+                    wordSpan.style.marginRight = '0.75em';
+
+                    for(const char of word) {
+                        const span = document.createElement('span');
+                        span.textContent = char;
+                        span.style.display = 'inline-block';
+                        wordSpan.appendChild(span);
+                        charsToAnimate.push(span);
+                    }
+                    partEl.appendChild(wordSpan);
                 });
-            }
-            
-            function enhanceImmersion() {
-                // Custom Cursor
-                const cursor = document.createElement('div');
-                const cursorDot = document.createElement('div');
-                cursor.className = 'custom-cursor';
-                cursorDot.className = 'cursor-dot';
-                document.body.appendChild(cursor);
-                document.body.appendChild(cursorDot);
 
-                // Cursor Movement
-                document.addEventListener('mousemove', (e) => {
-                    gsap.to(cursor, { duration: 0.23, left: e.clientX, top: e.clientY });
-                    gsap.to(cursorDot, { duration: 0.1, left: e.clientX, top: e.clientY });
-                });
-
-                // Particle System
-                function createParticle(x, y) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    document.body.appendChild(particle);
-
-                    gsap.set(particle, {
-                        left: x,
-                        top: y,
-                        width: gsap.utils.random(2, 6),
-                        height: gsap.utils.random(2, 6),
+                if (part.type === 'furious') {
+                    partEl.style.fontWeight = 'bold';
+                    partEl.style.fontSize = '1.1em';
+                    gsap.set(charsToAnimate, { opacity: 0 });
+                    await gsap.to(charsToAnimate, {
+                        duration: 0.2,
+                        opacity: 1,
+                        x: 'random(-5, 5)',
+                        y: 'random(-5, 5)',
+                        rotation: 'random(-10, 10)',
+                        stagger: 0.015,
+                        ease: 'power3.inOut'
                     });
-
-                    gsap.to(particle, {
-                        duration: gsap.utils.random(1, 3),
-                        opacity: gsap.utils.random(0.1, 0.3),
-                        y: y - gsap.utils.random(50, 100),
-                        x: x + gsap.utils.random(-50, 50),
-                        rotation: gsap.utils.random(-360, 360),
-                        ease: "power2.out",
-                        onComplete: () => particle.remove()
+                } else if (part.type === 'resigned') {
+                    gsap.set(charsToAnimate, { opacity: 0, y: 20 });
+                    await gsap.to(charsToAnimate, {
+                        duration: 1.5,
+                        opacity: 0.7,
+                        y: 0,
+                        stagger: 0.1,
+                        ease: 'power2.out'
+                    });
+                } else {
+                    gsap.set(charsToAnimate, { opacity: 0, textShadow: '0 0 20px #8A0303' });
+                    await gsap.to(charsToAnimate, {
+                        duration: 0.5,
+                        opacity: 1,
+                        textShadow: '0 0 0 #8A0303',
+                        stagger: 0.06,
+                        ease: 'power2.out'
                     });
                 }
 
-                // Spawn particles on mouse move
-                let lastSpawn = 0;
-                document.addEventListener('mousemove', (e) => {
-                    const now = Date.now();
-                    if (now - lastSpawn > 50) { // Limit particle creation
-                        createParticle(e.clientX, e.clientY);
-                        lastSpawn = now;
-                    }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            setTimeout(() => {
+                window.location.href = 'https://aplipinski16.wixsite.com/boos-clues'; // Redirect to your final link
+            }, 1000);
+        }
+
+        // Show an incorrect answer message with try-again/close controls
+        function showFeedback(text) {
+            messageText.innerHTML = "A good riddle is sometimes a puzzle in words, other times a magician's trick. That's incorrect.<br><br>Would you try me again?";
+
+            // Create buttons container with fixed styling
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'flex justify-center items-center gap-16 mt-8';
+
+            // Create "I would" button with fixed styling
+            const tryAgainBtn = document.createElement('button');
+            tryAgainBtn.textContent = 'I would';
+            tryAgainBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
+            tryAgainBtn.style.color = '#F1E9D2';
+            tryAgainBtn.style.transition = 'all 0.3s ease';
+            tryAgainBtn.onmouseover = () => { tryAgainBtn.style.transform = 'scale(1.1)'; };
+            tryAgainBtn.onmouseout = () => { tryAgainBtn.style.transform = 'scale(1)'; };
+            tryAgainBtn.onclick = () => {
+                hideFeedback();
+                scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('guess-input').value = '';
+            };
+
+            // Create "I would not" button with fixed styling
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'I would not';
+            closeBtn.className = 'riddle-button font-didone text-2xl tracking-wider';
+            closeBtn.style.color = '#F1E9D2';
+            closeBtn.style.transition = 'all 0.3s ease';
+            closeBtn.onmouseover = () => { closeBtn.style.transform = 'scale(1.1)'; };
+            closeBtn.onmouseout = () => { closeBtn.style.transform = 'scale(1)'; };
+            closeBtn.onclick = () => {
+                window.close();
+            };
+
+            // Add buttons to container
+            buttonsContainer.appendChild(tryAgainBtn);
+            buttonsContainer.appendChild(closeBtn);
+
+            // Clear existing content and add new elements
+            const messageContent = document.querySelector('#message-content');
+            messageContent.innerHTML = '';
+            messageContent.className = 'bg-[#1D1D1D] border border-[#313131] p-12 rounded-lg shadow-2xl text-center max-w-2xl mx-4';
+            messageContent.appendChild(messageText);
+            messageContent.appendChild(buttonsContainer);
+
+            messageBox.classList.remove('invisible');
+            gsap.to(messageBox, { duration: 0.5, opacity: 1 });
+        }
+
+        function hideFeedback() {
+            gsap.to(messageBox, {
+                duration: 0.5,
+                opacity: 0,
+                onComplete: () => messageBox.classList.add('invisible')
+            });
+        }
+
+        function enhanceImmersion() {
+            // Custom Cursor
+            const cursor = document.createElement('div');
+            const cursorDot = document.createElement('div');
+            cursor.className = 'custom-cursor';
+            cursorDot.className = 'cursor-dot';
+            document.body.appendChild(cursor);
+            document.body.appendChild(cursorDot);
+
+            // Cursor Movement
+            document.addEventListener('mousemove', (e) => {
+                gsap.to(cursor, { duration: 0.23, left: e.clientX, top: e.clientY });
+                gsap.to(cursorDot, { duration: 0.1, left: e.clientX, top: e.clientY });
+            });
+
+            // Particle System
+            function createParticle(x, y) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                document.body.appendChild(particle);
+
+                gsap.set(particle, {
+                    left: x,
+                    top: y,
+                    width: gsap.utils.random(2, 6),
+                    height: gsap.utils.random(2, 6),
                 });
 
-                // Interactive Text Effects
-                document.querySelectorAll('.stanza-section p').forEach(stanza => {
-                    stanza.addEventListener('mousemove', (e) => {
-                        const rect = stanza.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-                        
-                        gsap.to(stanza, {
-                            duration: 0.5,
-                            textShadow: `${(x - rect.width / 2) / 50}px ${(y - rect.height / 2) / 50}px 15px rgba(241, 233, 210, 0.3)`,
-                            ease: "power2.out"
-                        });
-                    });
-
-                    stanza.addEventListener('mouseleave', () => {
-                        gsap.to(stanza, {
-                            duration: 0.5,
-                            textShadow: 'none',
-                            ease: "power2.out"
-                        });
-                    });
-                });
-
-                // Add floating effect to all stanzas
-                gsap.to('.stanza-section p', {
-                    y: 10,
-                    duration: 2,
-                    repeat: -1,
-                    yoyo: true,
-                    ease: "power1.inOut",
-                    stagger: {
-                        each: 0.5,
-                        from: "random"
-                    }
+                gsap.to(particle, {
+                    duration: gsap.utils.random(1, 3),
+                    opacity: gsap.utils.random(0.1, 0.3),
+                    y: y - gsap.utils.random(50, 100),
+                    x: x + gsap.utils.random(-50, 50),
+                    rotation: gsap.utils.random(-360, 360),
+                    ease: "power2.out",
+                    onComplete: () => particle.remove()
                 });
             }
 
-            enhanceImmersion();
-            initializeExperience();
-        });
+            // Spawn particles on mouse move
+            let lastSpawn = 0;
+            document.addEventListener('mousemove', (e) => {
+                const now = Date.now();
+                if (now - lastSpawn > 50) { // Limit particle creation
+                    createParticle(e.clientX, e.clientY);
+                    lastSpawn = now;
+                }
+            });
+
+            // Interactive Text Effects
+            document.querySelectorAll('.stanza-section p').forEach(stanza => {
+                stanza.addEventListener('mousemove', (e) => {
+                    const rect = stanza.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    gsap.to(stanza, {
+                        duration: 0.5,
+                        textShadow: `${(x - rect.width / 2) / 50}px ${(y - rect.height / 2) / 50}px 15px rgba(241, 233, 210, 0.3)`,
+                        ease: "power2.out"
+                    });
+                });
+
+                stanza.addEventListener('mouseleave', () => {
+                    gsap.to(stanza, {
+                        duration: 0.5,
+                        textShadow: 'none',
+                        ease: "power2.out"
+                    });
+                });
+            });
+
+            // Add floating effect to all stanzas
+            gsap.to('.stanza-section p', {
+                y: 10,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "power1.inOut",
+                stagger: {
+                    each: 0.5,
+                    from: "random"
+                }
+            });
+        }
+
+        enhanceImmersion();
+        initializeExperience();
+    });
     </script>
 </body>
 </html>
+
