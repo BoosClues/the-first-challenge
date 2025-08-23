@@ -321,7 +321,7 @@
                         // Split by line breaks first
                         const lines = text.split(/(<br>|\n)/g);
 
-                        lines.forEach((line, i) => {
+                        lines.forEach((line) => {
                             if (line.match(/<br>|\n/)) {
                                 fragment.appendChild(document.createElement('br'));
                                 return;
@@ -449,6 +449,9 @@
         }
 
         async function handleCorrectAnswer() {
+            // Hide arrow for the final sequence
+            scrollArrow.style.display = 'none';
+
             await gsap.to(scrollContainer, { duration: 1, opacity: 0, ease: 'power2.in' });
 
             scrollContainer.innerHTML = '';
@@ -522,15 +525,16 @@
                 } else {
                     gsap.set(charsToAnimate, { opacity: 0, textShadow: '0 0 20px #8A0303' });
                     await gsap.to(charsToAnimate, {
-                        duration: 0.5,
+                        duration: 0.3,        /* faster appearance */
                         opacity: 1,
                         textShadow: '0 0 0 #8A0303',
-                        stagger: 0.06,
+                        stagger: 0.04,        /* quicker stagger */
                         ease: 'power2.out'
                     });
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Shorter delay after "One Moment." to speed things up
+                await new Promise(resolve => setTimeout(resolve, part.type === 'normal' ? 1000 : 2000));
             }
 
             setTimeout(() => {
@@ -540,6 +544,9 @@
 
         // Show an incorrect answer message with try-again/close controls
         function showFeedback(text) {
+            // Hide arrow while the incorrect-answer overlay is showing
+            scrollArrow.style.display = 'none';
+
             messageText.innerHTML = "A good riddle is sometimes a puzzle in words, other times a magician's trick. That's incorrect.<br><br>Would you try me again?";
 
             // Create buttons container with fixed styling
@@ -591,7 +598,16 @@
             gsap.to(messageBox, {
                 duration: 0.5,
                 opacity: 0,
-                onComplete: () => messageBox.classList.add('invisible')
+                onComplete: () => {
+                    messageBox.classList.add('invisible');
+                    // Show arrow again when the overlay disappears if we're not on the last section
+                    const currentScroll = scrollContainer.scrollTop;
+                    const sectionHeight = window.innerHeight;
+                    const currentIndex = Math.round(currentScroll / sectionHeight);
+                    if (currentIndex < riddleStanzas.length) {
+                        scrollArrow.style.display = '';
+                    }
+                }
             });
         }
 
